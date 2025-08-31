@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"net/url"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -98,6 +101,9 @@ func Load() (*Config, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
+	// Handle Dokku PostgreSQL DATABASE_URL
+	handleDokkuDatabaseURL()
+
 	// Read config file
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
@@ -158,4 +164,62 @@ func setDefaults() {
 	// WhatsApp defaults
 	viper.SetDefault("whatsapp.zapi.base_url", "https://api.z-api.io/instances")
 	viper.SetDefault("whatsapp.zapi.client_token", "123")
+}
+
+// handleDokkuDatabaseURL parses DATABASE_URL from Dokku PostgreSQL plugin
+func handleDokkuDatabaseURL() {
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		return
+	}
+
+	// Parse the DATABASE_URL
+	// Format: postgres://user:password@host:port/database?sslmode=require
+	parsedURL, err := url.Parse(databaseURL)
+	if err != nil {
+		return
+	}
+
+	if parsedURL.Scheme == "postgres" || parsedURL.Scheme == "postgresql" {
+		// Set database driver to postgres
+		viper.Set("database.driver", "postgres")
+
+		// Extract host and port
+		host := parsedURL.Hostname()
+		if host != "" {
+			viper.Set("database.postgres.host", host)
+		}
+
+		port := parsedURL.Port()
+		if port != "" {
+			if portInt, err := strconv.Atoi(port); err == nil {
+				viper.Set("database.postgres.port", portInt)
+			}
+		}
+
+		// Extract user
+		if parsedURL.User != nil {
+			if username := parsedURL.User.Username(); username != "" {
+				viper.Set("database.postgres.user", username)
+			}
+
+			if password, ok := parsedURL.User.Password(); ok && password != "" {
+				viper.Set("database.postgres.password", password)
+			}
+		}
+
+		// Extract database name
+		if dbName := strings.TrimPrefix(parsedURL.Path, "/"); dbName != "" {
+			viper.Set("database.postgres.database", dbName)
+		}
+
+		// Extract SSL mode from query parameters
+		queryParams := parsedURL.Query()
+		if sslMode := queryParams.Get("sslmode"); sslMode != "" {
+			viper.Set("database.postgres.sslmode", sslMode)
+		} else {
+			// Default to require for production
+			viper.Set("database.postgres.sslmode", "require")
+		}
+	}
 }
