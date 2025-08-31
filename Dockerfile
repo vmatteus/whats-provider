@@ -22,8 +22,6 @@ WORKDIR /root/
 
 # Copy the binary from builder
 COPY --from=builder /app/main .
-COPY --from=builder /app/config.yaml .
-COPY --from=builder /app/config.production.yaml .
 
 # Create data directory
 RUN mkdir -p data

@@ -12,72 +12,72 @@
     }
   },
   "env": {
-    "SERVER_HOST": {
+    "APP_SERVER_HOST": {
       "description": "Server host",
       "value": "0.0.0.0",
       "required": false
     },
-    "SERVER_PORT": {
+    "APP_SERVER_PORT": {
       "description": "Server port",
       "value": "8080",
       "required": false
     },
-    "SERVER_MODE": {
+    "APP_SERVER_MODE": {
       "description": "Server mode (debug, release, test)",
       "value": "release",
       "required": false
     },
-    "DATABASE_DRIVER": {
+    "APP_DATABASE_DRIVER": {
       "description": "Database driver (postgres, sqlite)",
       "value": "postgres",
       "required": true
     },
-    "DATABASE_HOST": {
+    "APP_DATABASE_POSTGRES_HOST": {
       "description": "Database host",
       "required": true
     },
-    "DATABASE_PORT": {
+    "APP_DATABASE_POSTGRES_PORT": {
       "description": "Database port",
       "value": "5432",
       "required": false
     },
-    "DATABASE_USER": {
+    "APP_DATABASE_POSTGRES_USER": {
       "description": "Database user",
       "required": true
     },
-    "DATABASE_PASSWORD": {
+    "APP_DATABASE_POSTGRES_PASSWORD": {
       "description": "Database password",
       "required": true
     },
-    "DATABASE_NAME": {
+    "APP_DATABASE_POSTGRES_DATABASE": {
       "description": "Database name",
       "required": true
     },
-    "DATABASE_SSLMODE": {
+    "APP_DATABASE_POSTGRES_SSLMODE": {
       "description": "Database SSL mode",
       "value": "require",
       "required": false
     },
-    "LOGGER_LEVEL": {
+    "APP_LOGGER_LEVEL": {
       "description": "Logger level",
       "value": "info",
       "required": false
     },
-    "LOGGER_FORMAT": {
+    "APP_LOGGER_FORMAT": {
       "description": "Logger format",
       "value": "json",
       "required": false
     },
-    "LOGGER_PROVIDER": {
+    "APP_LOGGER_PROVIDER": {
       "description": "Logger provider",
       "value": "stdout",
       "required": false
     },
-    "ZAPI_BASE_URL": {
+    "APP_WHATSAPP_PROVIDERS_ZAPI_BASE_URL": {
       "description": "ZApi base URL for WhatsApp integration",
       "required": false
     },
-    "ZAPI_CLIENT_TOKEN": {
+    "APP_WHATSAPP_PROVIDERS_ZAPI_CLIENT_TOKEN": {
       "description": "ZApi client token for WhatsApp integration",
       "required": false
     }
