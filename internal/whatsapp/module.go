@@ -28,7 +28,21 @@ var Module = fx.Module("whatsapp",
 		),
 	),
 
-	// Provedores
+	// Provider Factory e Registry
+	fx.Provide(
+		fx.Annotate(
+			infrastructure.NewDefaultProviderFactory,
+			fx.As(new(domain.ProviderFactory)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrastructure.NewDefaultProviderRegistry,
+			fx.As(new(domain.ProviderRegistry)),
+		),
+	),
+
+	// Providers individuais
 	fx.Provide(newZAPIProviderWithConfig),
 
 	// Serviços
@@ -39,6 +53,7 @@ var Module = fx.Module("whatsapp",
 
 	// Configuração dos provedores
 	fx.Invoke(registerProviders),
+	fx.Invoke(setupProviderFactory),
 )
 
 // registerProviders registra todos os provedores no serviço
@@ -46,7 +61,22 @@ func registerProviders(
 	service *application.WhatsAppService,
 	zapiProvider *providers.ZAPIProvider,
 ) {
-	service.RegisterProvider(zapiProvider)
+	err := service.RegisterProvider(zapiProvider)
+	if err != nil {
+		// Log error but don't panic, let the app continue
+		// The logger will already log this error in the service
+	}
+}
+
+// setupProviderFactory configura o factory com os criadores de providers
+func setupProviderFactory(
+	factory domain.ProviderFactory,
+) {
+	// Registra o creator do Z-API
+	err := factory.RegisterProvider("z-api", providers.GetZAPIProviderCreator())
+	if err != nil {
+		// Log error but don't panic
+	}
 }
 
 // newZAPIProviderWithConfig cria um ZAPIProvider com configuração injetada

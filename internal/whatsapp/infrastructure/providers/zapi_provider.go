@@ -368,3 +368,57 @@ func (z *ZAPIProvider) makeRequest(ctx context.Context, method, url string, body
 
 	return responseBody, nil
 }
+
+// Configure configura o provider com os parâmetros específicos
+func (z *ZAPIProvider) Configure(config domain.ProviderConfig) error {
+	if baseURL, ok := config["base_url"].(string); ok && baseURL != "" {
+		z.baseURL = baseURL
+	}
+
+	if clientToken, ok := config["client_token"].(string); ok && clientToken != "" {
+		z.clientToken = clientToken
+	}
+
+	if timeout, ok := config["timeout"].(time.Duration); ok && timeout > 0 {
+		z.httpClient.Timeout = timeout
+	}
+
+	z.logger.Info().Msg("Z-API provider configured successfully")
+	return nil
+}
+
+// HealthCheck verifica se o provider está funcionando
+func (z *ZAPIProvider) HealthCheck(ctx context.Context) error {
+	// Faz uma requisição simples para verificar se a API está respondendo
+	url := fmt.Sprintf("%s/status", z.baseURL)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create health check request: %w", err)
+	}
+
+	resp, err := z.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("health check failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 500 {
+		return fmt.Errorf("Z-API server error: status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// GetSupportedFeatures retorna as funcionalidades suportadas pelo provider
+func (z *ZAPIProvider) GetSupportedFeatures() []domain.ProviderFeature {
+	return []domain.ProviderFeature{
+		domain.FeatureTextMessages,
+		domain.FeatureImageMessages,
+		domain.FeatureVideoMessages,
+		domain.FeatureAudioMessages,
+		domain.FeatureFileMessages,
+		domain.FeatureStatusCheck,
+		domain.FeatureWebhooks,
+	}
+}

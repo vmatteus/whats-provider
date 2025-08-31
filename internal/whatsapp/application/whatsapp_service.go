@@ -13,44 +13,46 @@ import (
 
 // WhatsAppService gerencia todas as operações do WhatsApp
 type WhatsAppService struct {
-	providers    map[string]domain.WhatsAppProvider
-	messageRepo  domain.MessageRepository
-	instanceRepo domain.InstanceRepository
-	logger       zerolog.Logger
+	providerRegistry domain.ProviderRegistry
+	messageRepo      domain.MessageRepository
+	instanceRepo     domain.InstanceRepository
+	logger           zerolog.Logger
 }
 
 // NewWhatsAppService cria uma nova instância do serviço
 func NewWhatsAppService(
+	providerRegistry domain.ProviderRegistry,
 	messageRepo domain.MessageRepository,
 	instanceRepo domain.InstanceRepository,
 	logger zerolog.Logger,
 ) *WhatsAppService {
 	return &WhatsAppService{
-		providers:    make(map[string]domain.WhatsAppProvider),
-		messageRepo:  messageRepo,
-		instanceRepo: instanceRepo,
-		logger:       logger.With().Str("service", "whatsapp").Logger(),
+		providerRegistry: providerRegistry,
+		messageRepo:      messageRepo,
+		instanceRepo:     instanceRepo,
+		logger:           logger.With().Str("service", "whatsapp").Logger(),
 	}
 }
 
 // RegisterProvider registra um novo provedor
-func (s *WhatsAppService) RegisterProvider(provider domain.WhatsAppProvider) {
-	s.providers[provider.GetName()] = provider
+func (s *WhatsAppService) RegisterProvider(provider domain.WhatsAppProvider) error {
+	err := s.providerRegistry.Register(provider)
+	if err != nil {
+		s.logger.Error().Err(err).Str("provider", provider.GetName()).Msg("Failed to register provider")
+		return err
+	}
 	s.logger.Info().Str("provider", provider.GetName()).Msg("Provider registered")
+	return nil
 }
 
 // GetProviders retorna todos os provedores registrados
 func (s *WhatsAppService) GetProviders() []string {
-	providers := make([]string, 0, len(s.providers))
-	for name := range s.providers {
-		providers = append(providers, name)
-	}
-	return providers
+	return s.providerRegistry.List()
 }
 
 // CreateInstance cria uma nova instância do WhatsApp
 func (s *WhatsAppService) CreateInstance(ctx context.Context, request domain.CreateInstanceRequest) (*domain.Instance, error) {
-	provider, exists := s.providers[request.Provider]
+	provider, exists := s.providerRegistry.Get(request.Provider)
 	if !exists {
 		return nil, fmt.Errorf("provider %s not found", request.Provider)
 	}
@@ -96,7 +98,7 @@ func (s *WhatsAppService) DeleteInstance(ctx context.Context, id uuid.UUID) erro
 		return fmt.Errorf("instance not found: %w", err)
 	}
 
-	provider, exists := s.providers[instance.Provider]
+	provider, exists := s.providerRegistry.Get(instance.Provider)
 	if !exists {
 		return fmt.Errorf("provider %s not found", instance.Provider)
 	}
@@ -136,7 +138,7 @@ func (s *WhatsAppService) SendMessage(ctx context.Context, request domain.SendMe
 		return nil, fmt.Errorf("instance not found: %w", err)
 	}
 
-	provider, exists := s.providers[instance.Provider]
+	provider, exists := s.providerRegistry.Get(instance.Provider)
 	if !exists {
 		return nil, fmt.Errorf("provider %s not found", instance.Provider)
 	}
@@ -197,10 +199,63 @@ func (s *WhatsAppService) GetInstanceStatus(ctx context.Context, instanceID stri
 		return nil, fmt.Errorf("instance not found: %w", err)
 	}
 
-	provider, exists := s.providers[instance.Provider]
+	provider, exists := s.providerRegistry.Get(instance.Provider)
 	if !exists {
 		return nil, fmt.Errorf("provider %s not found", instance.Provider)
 	}
 
 	return provider.GetInstanceStatus(ctx, instance)
+}
+
+// GetProviderFeatures retorna as funcionalidades suportadas por um provider
+func (s *WhatsAppService) GetProviderFeatures(providerName string) ([]domain.ProviderFeature, error) {
+	provider, exists := s.providerRegistry.Get(providerName)
+	if !exists {
+		return nil, fmt.Errorf("provider %s not found", providerName)
+	}
+
+	// Verifica se o provider implementa a interface estendida
+	if extendedProvider, ok := provider.(interface {
+		GetSupportedFeatures() []domain.ProviderFeature
+	}); ok {
+		return extendedProvider.GetSupportedFeatures(), nil
+	}
+
+	// Retorna features básicas para providers que não implementam a interface estendida
+	return []domain.ProviderFeature{
+		domain.FeatureTextMessages,
+		domain.FeatureStatusCheck,
+	}, nil
+}
+
+// CheckProviderHealth verifica a saúde de um provider específico
+func (s *WhatsAppService) CheckProviderHealth(ctx context.Context, providerName string) error {
+	provider, exists := s.providerRegistry.Get(providerName)
+	if !exists {
+		return fmt.Errorf("provider %s not found", providerName)
+	}
+
+	// Verifica se o provider implementa health check
+	if healthProvider, ok := provider.(interface{ HealthCheck(context.Context) error }); ok {
+		return healthProvider.HealthCheck(ctx)
+	}
+
+	// Para providers que não implementam health check, assumimos que estão ok
+	return nil
+}
+
+// CheckAllProvidersHealth verifica a saúde de todos os providers
+func (s *WhatsAppService) CheckAllProvidersHealth(ctx context.Context) map[string]error {
+	results := make(map[string]error)
+	providers := s.providerRegistry.GetAll()
+
+	for name, provider := range providers {
+		if healthProvider, ok := provider.(interface{ HealthCheck(context.Context) error }); ok {
+			results[name] = healthProvider.HealthCheck(ctx)
+		} else {
+			results[name] = nil // Assume que está ok
+		}
+	}
+
+	return results
 }
