@@ -25,6 +25,12 @@ type WhatsAppProvider interface {
 
 	// ValidateToken valida se o token é válido
 	ValidateToken(ctx context.Context, token string) error
+
+	// UpdateProfileName atualiza o nome do perfil da instância
+	UpdateProfileName(ctx context.Context, instance *Instance, request UpdateProfileNameRequest) (*UpdateProfileResponse, error)
+
+	// UpdateProfilePicture atualiza a foto do perfil da instância
+	UpdateProfilePicture(ctx context.Context, instance *Instance, request UpdateProfilePictureRequest) (*UpdateProfileResponse, error)
 }
 
 // MessageRepository define a interface para persistência de mensagens

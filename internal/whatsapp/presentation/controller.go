@@ -183,6 +183,42 @@ func (c *WhatsAppController) GetInstanceStatus(ctx *gin.Context) {
 	response.Success(ctx, status)
 }
 
+// UpdateProfileName atualiza o nome do perfil de uma instância
+func (c *WhatsAppController) UpdateProfileName(ctx *gin.Context) {
+	var request domain.UpdateProfileNameRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		response.BadRequest(ctx, "Invalid request body", err.Error())
+		return
+	}
+
+	result, err := c.service.UpdateProfileName(ctx.Request.Context(), request)
+	if err != nil {
+		c.logger.Error().Err(err).Interface("request", request).Msg("Failed to update profile name")
+		response.InternalServerError(ctx, "Failed to update profile name", err.Error())
+		return
+	}
+
+	response.Success(ctx, result)
+}
+
+// UpdateProfilePicture atualiza a foto do perfil de uma instância
+func (c *WhatsAppController) UpdateProfilePicture(ctx *gin.Context) {
+	var request domain.UpdateProfilePictureRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		response.BadRequest(ctx, "Invalid request body", err.Error())
+		return
+	}
+
+	result, err := c.service.UpdateProfilePicture(ctx.Request.Context(), request)
+	if err != nil {
+		c.logger.Error().Err(err).Interface("request", request).Msg("Failed to update profile picture")
+		response.InternalServerError(ctx, "Failed to update profile picture", err.Error())
+		return
+	}
+
+	response.Success(ctx, result)
+}
+
 // RegisterRoutes registra as rotas do controller
 func (c *WhatsAppController) RegisterRoutes(router *gin.RouterGroup) {
 	whatsapp := router.Group("/whatsapp")
@@ -203,5 +239,9 @@ func (c *WhatsAppController) RegisterRoutes(router *gin.RouterGroup) {
 		// Mensagens
 		whatsapp.POST("/messages", c.SendMessage)
 		whatsapp.GET("/messages/:id", c.GetMessage)
+
+		// Perfil
+		whatsapp.PUT("/profile/name", c.UpdateProfileName)
+		whatsapp.PUT("/profile/picture", c.UpdateProfilePicture)
 	}
 }

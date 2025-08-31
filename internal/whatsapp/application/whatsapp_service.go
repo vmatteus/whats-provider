@@ -259,3 +259,87 @@ func (s *WhatsAppService) CheckAllProvidersHealth(ctx context.Context) map[strin
 
 	return results
 }
+
+// UpdateProfileName atualiza o nome do perfil de uma instância
+func (s *WhatsAppService) UpdateProfileName(ctx context.Context, request domain.UpdateProfileNameRequest) (*domain.UpdateProfileResponse, error) {
+
+	// Converte o instance_id string para UUID
+	instanceUUID, err := uuid.Parse(request.InstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance ID: %w", err)
+	}
+
+	s.logger.Info().Str("uuid", instanceUUID.String()).Msg("DEBUG: Parsed UUID, calling GetByID")
+
+	// Busca a instância pela instanceID string
+	instance, err := s.instanceRepo.GetByID(ctx, instanceUUID)
+	if err != nil {
+		return nil, fmt.Errorf("instance not found: %w", err)
+	}
+
+	provider, exists := s.providerRegistry.Get(instance.Provider)
+	if !exists {
+		return nil, fmt.Errorf("provider %s not found", instance.Provider)
+	}
+
+	// Envia através do provedor
+	response, err := provider.UpdateProfileName(ctx, instance, request)
+	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Str("instance_id", request.InstanceID).
+			Str("name", request.Name).
+			Msg("Failed to update profile name")
+		return nil, fmt.Errorf("failed to update profile name: %w", err)
+	}
+
+	s.logger.Info().
+		Str("instance_id", request.InstanceID).
+		Str("name", request.Name).
+		Bool("success", response.Success).
+		Msg("Profile name update completed")
+
+	return response, nil
+}
+
+// UpdateProfilePicture atualiza a foto do perfil de uma instância
+func (s *WhatsAppService) UpdateProfilePicture(ctx context.Context, request domain.UpdateProfilePictureRequest) (*domain.UpdateProfileResponse, error) {
+
+	// Converte o instance_id string para UUID
+	instanceUUID, err := uuid.Parse(request.InstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance ID: %w", err)
+	}
+
+	s.logger.Info().Str("uuid", instanceUUID.String()).Msg("DEBUG: Parsed UUID, calling GetByID")
+
+	// Busca a instância pela instanceID string
+	instance, err := s.instanceRepo.GetByID(ctx, instanceUUID)
+	if err != nil {
+		return nil, fmt.Errorf("instance not found: %w", err)
+	}
+
+	provider, exists := s.providerRegistry.Get(instance.Provider)
+	if !exists {
+		return nil, fmt.Errorf("provider %s not found", instance.Provider)
+	}
+
+	// Envia através do provedor
+	response, err := provider.UpdateProfilePicture(ctx, instance, request)
+	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Str("instance_id", request.InstanceID).
+			Str("picture_url", request.PictureURL).
+			Msg("Failed to update profile picture")
+		return nil, fmt.Errorf("failed to update profile picture: %w", err)
+	}
+
+	s.logger.Info().
+		Str("instance_id", request.InstanceID).
+		Str("picture_url", request.PictureURL).
+		Bool("success", response.Success).
+		Msg("Profile picture update completed")
+
+	return response, nil
+}

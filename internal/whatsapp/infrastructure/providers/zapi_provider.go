@@ -61,6 +61,22 @@ type ZAPIStatusResponse struct {
 	Error  string `json:"error,omitempty"`
 }
 
+// ZAPIUpdateProfileNameRequest representa a requisição para atualizar nome do perfil na Z-API
+type ZAPIUpdateProfileNameRequest struct {
+	Value string `json:"value"`
+}
+
+// ZAPIUpdateProfilePictureRequest representa a requisição para atualizar foto do perfil na Z-API
+type ZAPIUpdateProfilePictureRequest struct {
+	Value string `json:"value"`
+}
+
+// ZAPIUpdateProfileResponse representa a resposta de atualização de perfil da Z-API
+type ZAPIUpdateProfileResponse struct {
+	Success bool   `json:"success,omitempty"`
+	Error   string `json:"error,omitempty"`
+}
+
 // NewZAPIProvider cria um novo provedor Z-API
 func NewZAPIProvider(logger zerolog.Logger) *ZAPIProvider {
 	return &ZAPIProvider{
@@ -420,5 +436,133 @@ func (z *ZAPIProvider) GetSupportedFeatures() []domain.ProviderFeature {
 		domain.FeatureFileMessages,
 		domain.FeatureStatusCheck,
 		domain.FeatureWebhooks,
+		domain.FeatureProfileName,
+		domain.FeatureProfilePicture,
 	}
+}
+
+// UpdateProfileName atualiza o nome do perfil da instância
+func (z *ZAPIProvider) UpdateProfileName(ctx context.Context, instance *domain.Instance, request domain.UpdateProfileNameRequest) (*domain.UpdateProfileResponse, error) {
+	zapiRequest := ZAPIUpdateProfileNameRequest{
+		Value: request.Name,
+	}
+
+	url := fmt.Sprintf("%s/%s/token/%s/profile-name", z.baseURL, instance.InstanceID, instance.Token)
+
+	z.logger.Info().
+		Str("url", url).
+		Str("instance_id", instance.InstanceID).
+		Str("name", request.Name).
+		Msg("Updating profile name via Z-API")
+
+	response, err := z.makeRequest(ctx, "PUT", url, zapiRequest)
+	if err != nil {
+		z.logger.Error().
+			Err(err).
+			Str("url", url).
+			Msg("Failed to update profile name via Z-API")
+
+		errorMsg := err.Error()
+		return &domain.UpdateProfileResponse{
+			Success: false,
+			Error:   &errorMsg,
+		}, nil
+	}
+
+	var zapiResponse ZAPIUpdateProfileResponse
+	if err := json.Unmarshal(response, &zapiResponse); err != nil {
+		z.logger.Error().
+			Err(err).
+			Str("response", string(response)).
+			Msg("Failed to parse Z-API profile name update response")
+
+		errorMsg := fmt.Sprintf("failed to parse response: %v", err)
+		return &domain.UpdateProfileResponse{
+			Success: false,
+			Error:   &errorMsg,
+		}, nil
+	}
+
+	if zapiResponse.Error != "" {
+		z.logger.Error().
+			Str("error", zapiResponse.Error).
+			Msg("Z-API returned error when updating profile name")
+
+		return &domain.UpdateProfileResponse{
+			Success: false,
+			Error:   &zapiResponse.Error,
+		}, nil
+	}
+
+	z.logger.Info().
+		Str("instance_id", instance.InstanceID).
+		Str("name", request.Name).
+		Msg("Profile name updated successfully")
+
+	return &domain.UpdateProfileResponse{
+		Success: true,
+	}, nil
+}
+
+// UpdateProfilePicture atualiza a foto do perfil da instância
+func (z *ZAPIProvider) UpdateProfilePicture(ctx context.Context, instance *domain.Instance, request domain.UpdateProfilePictureRequest) (*domain.UpdateProfileResponse, error) {
+	zapiRequest := ZAPIUpdateProfilePictureRequest{
+		Value: request.PictureURL,
+	}
+
+	url := fmt.Sprintf("%s/%s/token/%s/profile-picture", z.baseURL, instance.InstanceID, instance.Token)
+
+	z.logger.Info().
+		Str("url", url).
+		Str("instance_id", instance.InstanceID).
+		Str("picture_url", request.PictureURL).
+		Msg("Updating profile picture via Z-API")
+
+	response, err := z.makeRequest(ctx, "PUT", url, zapiRequest)
+	if err != nil {
+		z.logger.Error().
+			Err(err).
+			Str("url", url).
+			Msg("Failed to update profile picture via Z-API")
+
+		errorMsg := err.Error()
+		return &domain.UpdateProfileResponse{
+			Success: false,
+			Error:   &errorMsg,
+		}, nil
+	}
+
+	var zapiResponse ZAPIUpdateProfileResponse
+	if err := json.Unmarshal(response, &zapiResponse); err != nil {
+		z.logger.Error().
+			Err(err).
+			Str("response", string(response)).
+			Msg("Failed to parse Z-API profile picture update response")
+
+		errorMsg := fmt.Sprintf("failed to parse response: %v", err)
+		return &domain.UpdateProfileResponse{
+			Success: false,
+			Error:   &errorMsg,
+		}, nil
+	}
+
+	if zapiResponse.Error != "" {
+		z.logger.Error().
+			Str("error", zapiResponse.Error).
+			Msg("Z-API returned error when updating profile picture")
+
+		return &domain.UpdateProfileResponse{
+			Success: false,
+			Error:   &zapiResponse.Error,
+		}, nil
+	}
+
+	z.logger.Info().
+		Str("instance_id", instance.InstanceID).
+		Str("picture_url", request.PictureURL).
+		Msg("Profile picture updated successfully")
+
+	return &domain.UpdateProfileResponse{
+		Success: true,
+	}, nil
 }

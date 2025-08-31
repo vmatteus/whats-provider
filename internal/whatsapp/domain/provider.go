@@ -11,14 +11,16 @@ type ProviderConfig map[string]interface{}
 type ProviderFeature string
 
 const (
-	FeatureTextMessages  ProviderFeature = "text_messages"
-	FeatureImageMessages ProviderFeature = "image_messages"
-	FeatureVideoMessages ProviderFeature = "video_messages"
-	FeatureAudioMessages ProviderFeature = "audio_messages"
-	FeatureFileMessages  ProviderFeature = "file_messages"
-	FeatureGroupMessages ProviderFeature = "group_messages"
-	FeatureWebhooks      ProviderFeature = "webhooks"
-	FeatureStatusCheck   ProviderFeature = "status_check"
+	FeatureTextMessages   ProviderFeature = "text_messages"
+	FeatureImageMessages  ProviderFeature = "image_messages"
+	FeatureVideoMessages  ProviderFeature = "video_messages"
+	FeatureAudioMessages  ProviderFeature = "audio_messages"
+	FeatureFileMessages   ProviderFeature = "file_messages"
+	FeatureGroupMessages  ProviderFeature = "group_messages"
+	FeatureWebhooks       ProviderFeature = "webhooks"
+	FeatureStatusCheck    ProviderFeature = "status_check"
+	FeatureProfileName    ProviderFeature = "profile_name"
+	FeatureProfilePicture ProviderFeature = "profile_picture"
 )
 
 // WhatsAppProviderExtended estende a interface WhatsAppProvider com funcionalidades adicionais
