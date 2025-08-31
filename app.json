@@ -6,11 +6,7 @@
   "repository": "https://github.com/vmatteus/whats-provider",
   "logo": "",
   "success_url": "/health",
-  "scripts": {
-    "dokku": {
-      "predeploy": "echo 'Preparing deployment...'"
-    }
-  },
+
   "env": {
     "APP_SERVER_HOST": {
       "description": "Server host",
