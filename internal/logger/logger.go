@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -22,7 +23,6 @@ func InitLogger(cfg config.LoggerConfig) Logger {
 		return err.Error()
 	}
 
-	var logger zerolog.Logger
 	var appLogger AppLogger
 
 	switch cfg.Provider {
@@ -36,6 +36,15 @@ func InitLogger(cfg config.LoggerConfig) Logger {
 		appLogger = NewElasticsearchLogger(cfg)
 	default:
 		log.Fatal().Msg("Invalid logger provider specified")
+	}
+
+	// Create a logger instance based on the appLogger
+	var logger zerolog.Logger
+	if stdoutLogger, ok := appLogger.(*StdoutLogger); ok {
+		logger = stdoutLogger.logger
+	} else {
+		// Fallback to a default stdout logger for other types
+		logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 	}
 
 	return Logger{

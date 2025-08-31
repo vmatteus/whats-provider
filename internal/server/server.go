@@ -14,19 +14,27 @@ import (
 	"github.com/your-org/boilerplate-go/internal/logger"
 	"github.com/your-org/boilerplate-go/internal/middleware"
 	"github.com/your-org/boilerplate-go/internal/user/presentation"
+	whatsappPresentation "github.com/your-org/boilerplate-go/internal/whatsapp/presentation"
 	"gorm.io/gorm"
 )
 
 type Server struct {
-	config         *config.Config
-	db             *gorm.DB
-	logger         *logger.Logger
-	router         *gin.Engine
-	userController *presentation.UserController
+	config             *config.Config
+	db                 *gorm.DB
+	logger             *logger.Logger
+	router             *gin.Engine
+	userController     *presentation.UserController
+	whatsappController *whatsappPresentation.WhatsAppController
 }
 
 // New creates a new server instance
-func New(cfg *config.Config, db *gorm.DB, appLogger *logger.Logger, userController *presentation.UserController) *Server {
+func New(
+	cfg *config.Config,
+	db *gorm.DB,
+	appLogger *logger.Logger,
+	userController *presentation.UserController,
+	whatsappController *whatsappPresentation.WhatsAppController,
+) *Server {
 	// Set Gin mode
 	gin.SetMode(cfg.Server.Mode)
 
@@ -34,11 +42,12 @@ func New(cfg *config.Config, db *gorm.DB, appLogger *logger.Logger, userControll
 	router := gin.New()
 
 	return &Server{
-		config:         cfg,
-		db:             db,
-		logger:         appLogger,
-		router:         router,
-		userController: userController,
+		config:             cfg,
+		db:                 db,
+		logger:             appLogger,
+		router:             router,
+		userController:     userController,
+		whatsappController: whatsappController,
 	}
 }
 
@@ -114,6 +123,9 @@ func (s *Server) setupRoutes() {
 
 		// User routes - using injected controller
 		s.userController.RegisterRoutes(v1)
+
+		// WhatsApp routes - using injected controller
+		s.whatsappController.RegisterRoutes(v1)
 	}
 }
 
@@ -128,7 +140,7 @@ func (s *Server) healthCheck(c *gin.Context) {
 // welcome handles welcome requests
 func (s *Server) welcome(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Welcome to Boilerplate Go API",
+		"message": "Welcome to WhatsApp Provider API",
 		"version": "1.0.0",
 	})
 }

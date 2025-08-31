@@ -14,6 +14,7 @@ import (
 	"github.com/your-org/boilerplate-go/internal/user/application"
 	"github.com/your-org/boilerplate-go/internal/user/infrastructure"
 	"github.com/your-org/boilerplate-go/internal/user/presentation"
+	"github.com/your-org/boilerplate-go/internal/whatsapp"
 	"gorm.io/gorm"
 )
 
@@ -24,6 +25,7 @@ var AppModule = fx.Module("app",
 	TelemetryModule,
 	DatabaseModule,
 	UserModule,
+	whatsapp.Module,
 	ServerModule,
 )
 
@@ -104,7 +106,7 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 
 // RunMigrations executa as migrações
 func RunMigrations(db *gorm.DB) error {
-	return database.Migrate(db)
+	return database.MigrateAll(db)
 }
 
 // SetupTracing configura tracing do banco

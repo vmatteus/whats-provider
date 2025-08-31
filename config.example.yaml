@@ -30,3 +30,8 @@ application:
   name: "boilerplate-go"
   version: "1.0.0"
   environment: "development"
+
+whatsapp:
+  zapi:
+    base_url: "https://api.z-api.io/instances"
+    client_token: "123"

@@ -14,6 +14,7 @@ type Config struct {
 	Telemetry   TelemetryConfig   `mapstructure:"telemetry"`
 	Application ApplicationConfig `mapstructure:"application"`
 	Apm         Apm               `mapstructure:"apm"`
+	WhatsApp    WhatsAppConfig    `mapstructure:"whatsapp"`
 }
 
 type ServerConfig struct {
@@ -66,12 +67,20 @@ type ApplicationConfig struct {
 }
 
 type Apm struct {
-	Url            string `mapstructure:"url"`
-	ServiceName    string `mapstructure:"service_name"`
-	ServiceVersion string `mapstructure:"service_version"`
-	Attributes     string `mapstructure:"attributes"`
-	Environment    string `mapstructure:"environment"`
-	Headers        string `mapstructure:"headers"`
+	Enabled    bool   `mapstructure:"enabled"`
+	Url        string `mapstructure:"url"`
+	Token      string `mapstructure:"token"`
+	Attributes string `mapstructure:"attributes"`
+	Headers    string `mapstructure:"headers"`
+}
+
+type WhatsAppConfig struct {
+	ZApi ZApiConfig `mapstructure:"zapi"`
+}
+
+type ZApiConfig struct {
+	BaseURL     string `mapstructure:"base_url"`
+	ClientToken string `mapstructure:"client_token"`
 }
 
 // Load reads configuration from file and environment variables
@@ -79,8 +88,7 @@ func Load() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
-	viper.AddConfigPath("./configs")
-	viper.AddConfigPath("$HOME/.boilerplate-go")
+	viper.AddConfigPath("./internal/config")
 
 	// Set default values
 	setDefaults()
@@ -146,4 +154,8 @@ func setDefaults() {
 	viper.SetDefault("application.name", "boilerplate-go")
 	viper.SetDefault("application.version", "1.0.0")
 	viper.SetDefault("application.environment", "development")
+
+	// WhatsApp defaults
+	viper.SetDefault("whatsapp.zapi.base_url", "https://api.z-api.io/instances")
+	viper.SetDefault("whatsapp.zapi.client_token", "123")
 }
