@@ -1,0 +1,2 @@
+# Dokku configuration
+export DOKKU_DOCKER_STOP_TIMEOUT=30

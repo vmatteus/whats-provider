@@ -1,0 +1,96 @@
+{
+  "name": "whats-provider",
+  "description": "WhatsApp Provider API - A clean Go boilerplate with WhatsApp integration",
+  "keywords": ["go", "api", "whatsapp", "clean-architecture"],
+  "website": "",
+  "repository": "https://github.com/vmatteus/whats-provider",
+  "logo": "",
+  "success_url": "/health",
+  "scripts": {
+    "dokku": {
+      "predeploy": "echo 'Preparing deployment...'"
+    }
+  },
+  "env": {
+    "SERVER_HOST": {
+      "description": "Server host",
+      "value": "0.0.0.0",
+      "required": false
+    },
+    "SERVER_PORT": {
+      "description": "Server port",
+      "value": "8080",
+      "required": false
+    },
+    "SERVER_MODE": {
+      "description": "Server mode (debug, release, test)",
+      "value": "release",
+      "required": false
+    },
+    "DATABASE_DRIVER": {
+      "description": "Database driver (postgres, sqlite)",
+      "value": "postgres",
+      "required": true
+    },
+    "DATABASE_HOST": {
+      "description": "Database host",
+      "required": true
+    },
+    "DATABASE_PORT": {
+      "description": "Database port",
+      "value": "5432",
+      "required": false
+    },
+    "DATABASE_USER": {
+      "description": "Database user",
+      "required": true
+    },
+    "DATABASE_PASSWORD": {
+      "description": "Database password",
+      "required": true
+    },
+    "DATABASE_NAME": {
+      "description": "Database name",
+      "required": true
+    },
+    "DATABASE_SSLMODE": {
+      "description": "Database SSL mode",
+      "value": "require",
+      "required": false
+    },
+    "LOGGER_LEVEL": {
+      "description": "Logger level",
+      "value": "info",
+      "required": false
+    },
+    "LOGGER_FORMAT": {
+      "description": "Logger format",
+      "value": "json",
+      "required": false
+    },
+    "LOGGER_PROVIDER": {
+      "description": "Logger provider",
+      "value": "stdout",
+      "required": false
+    },
+    "ZAPI_BASE_URL": {
+      "description": "ZApi base URL for WhatsApp integration",
+      "required": false
+    },
+    "ZAPI_CLIENT_TOKEN": {
+      "description": "ZApi client token for WhatsApp integration",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/go"
+    }
+  ]
+}
